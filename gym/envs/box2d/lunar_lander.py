@@ -318,25 +318,34 @@ class LunarLander(gym.Env, EzPickle):
         self.game_over = False
         self.prev_shaping = None
 
+#=========================================terrain==============================================
         W = VIEWPORT_W / SCALE
         H = VIEWPORT_H / SCALE
+        CHUNKS = 18 # originally 11
+        height = self.np_random.uniform(0, H / 2, size=(CHUNKS + 1,)) # ground height, random points(CHUNKS + 1), 
+                                                                      # from 0 to H / 2
+        chunk_x = [W / (CHUNKS - 1) * i for i in range(CHUNKS)] # ground got CHUNKS point distributed evenly
 
-        # terrain
-        CHUNKS = 11
-        height = self.np_random.uniform(0, H / 2, size=(CHUNKS + 1,))
-        chunk_x = [W / (CHUNKS - 1) * i for i in range(CHUNKS)]
+        # helipad is not in the middle of the ground, it is in the middle of the screen
         self.helipad_x1 = chunk_x[CHUNKS // 2 - 1]
         self.helipad_x2 = chunk_x[CHUNKS // 2 + 1]
-        self.helipad_y = H / 4
-        height[CHUNKS // 2 - 2] = self.helipad_y
-        height[CHUNKS // 2 - 1] = self.helipad_y
-        height[CHUNKS // 2 + 0] = self.helipad_y
-        height[CHUNKS // 2 + 1] = self.helipad_y
-        height[CHUNKS // 2 + 2] = self.helipad_y
+
+        my_cuntom_helipad_hight = 3
+        # self.helipad_y = H / 4 # originally H / 4
+        # height[CHUNKS // 2 - 2] = self.helipad_y
+        # height[CHUNKS // 2 - 1] = self.helipad_y
+        # height[CHUNKS // 2 + 0] = self.helipad_y
+        # height[CHUNKS // 2 + 1] = self.helipad_y
+        # height[CHUNKS // 2 + 2] = self.helipad_y
         smooth_y = [
             0.33 * (height[i - 1] + height[i + 0] + height[i + 1])
             for i in range(CHUNKS)
         ]
+        height[CHUNKS // 2 + 0] = self.np_random.uniform(0, H *3 / 5, size = 1)[0]
+        self.helipad_y = height[CHUNKS // 2 + 0] + my_cuntom_helipad_hight
+        smooth_y[CHUNKS // 2 - 1] = self.helipad_y
+        smooth_y[CHUNKS // 2 + 0] = self.helipad_y
+        smooth_y[CHUNKS // 2 + 1] = self.helipad_y
 
         self.moon = self.world.CreateStaticBody(
             shapes=edgeShape(vertices=[(0, 0), (W, 0)])
@@ -347,7 +356,7 @@ class LunarLander(gym.Env, EzPickle):
             p2 = (chunk_x[i + 1], smooth_y[i + 1])
             self.moon.CreateEdgeFixture(vertices=[p1, p2], density=0, friction=0.1)
             self.sky_polys.append([p1, p2, (p2[0], H), (p1[0], H)])
-
+#===============================================================================================
         self.moon.color1 = (0.0, 0.0, 0.0)
         self.moon.color2 = (0.0, 0.0, 0.0)
 
